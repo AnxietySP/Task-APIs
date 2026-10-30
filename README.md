@@ -1,12 +1,14 @@
-# Task List REST API
+# Task List REST API (MVC + MySQL)
 
-A light, flexible RESTful API built with **Node.js**, **Express**, and **Aiven MySQL Cloud Database**. This API provides complete CRUD (Create, Read, Update, Delete) operations for managing tasks.
+A robust, full-stack Task Management application built with **Node.js**, **Express**, **MVC Architecture**, and an **Aiven Cloud MySQL Database**, complete with a responsive vanilla JavaScript frontend.
 
 ## 🚀 Features
 
-- **Full CRUD Support**: Manage tasks seamlessly using standard HTTP methods (`GET`, `POST`, `PUT`, `DELETE`).
-- **Cloud Database Integration**: Connected to a managed Aiven Cloud MySQL instance using `mysql2/promise` with SSL encryption.
-- **Environment Security**: Uses `dotenv` for managing sensitive credentials securely outside version control.
+- **Model-View-Controller (MVC)**: Clean separation of concerns with modularized `models`, `controllers`, and `routes`.
+- **Full CRUD Support**: Create, read, update, and delete tasks seamlessly using standard HTTP methods.
+- **Cloud Database Integration**: Connected to an Aiven Cloud MySQL instance using `mysql2/promise` with automatic seeding via `schema.sql`.
+- **Interactive Frontend**: A responsive, clean user interface served via `public/` supporting real-time task status updates and filtering.
+- **CORS & Environment Security**: Configured with `cors` middleware and `dotenv` for secure credential management.
 
 ---
 
@@ -14,9 +16,9 @@ A light, flexible RESTful API built with **Node.js**, **Express**, and **Aiven M
 
 - **Runtime**: Node.js
 - **Framework**: Express.js
-- **Database**: Aiven Cloud MySQL
-- **Driver**: `mysql2` (Promise-based)
-- **Environment Management**: `dotenv`
+- **Database**: Aiven Cloud MySQL (`mysql2/promise`)
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- **Middleware**: `cors`, `dotenv`
 
 ---
 
@@ -24,10 +26,24 @@ A light, flexible RESTful API built with **Node.js**, **Express**, and **Aiven M
 
 ```text
 Task_APIs/
+├── database/
+│   └── schema.sql       # Database table creation and initial seeding
+├── public/
+│   ├── index.html       # Frontend user interface
+│   ├── script.js        # Frontend logic and API fetch requests
+│   └── style.css        # Application styling
 ├── src/
-│   └── db.js          # Database connection configuration (MySQL Pool)
-├── .env               # Environment variables (Ignored by Git)
-├── .gitignore         # Prevents committing secrets and dependencies
-├── package.json       # Project dependencies & scripts
-├── README.md          # Project documentation
-└── server.js          # Express app server and API endpoints
+│   ├── controllers/
+│   │   └── taskController.js # Request handlers and business logic
+│   ├── models/
+│   │   └── taskModel.js      # Database queries and data operations
+│   ├── routes/
+│   │   └── taskRoutes.js     # API endpoint routing
+│   └── db.js                 # MySQL connection pool configuration
+├── .env                 # Environment variables (Ignored by Git)
+├── .env.example         # Environment variables template
+├── .gitignore           # Prevents committing secrets and dependencies
+├── package.json         # Project dependencies & scripts
+├── README.md            # Project documentation
+├── server.js            # Express app entry point and server setup
+└── test-db.js           # Database connectivity test utility
