@@ -3,6 +3,13 @@
 
 const taskModel = require('../models/taskModel');
 
+// Helper to convert various incoming completed values to a clean boolean
+const parseBoolean = (val) => {
+  if (typeof val === 'boolean') return val;
+  if (typeof val === 'string') return val.toLowerCase() === 'true' || val === '1' || val === 'on';
+  return Boolean(val);
+};
+
 const taskController = {
   getAllTasks: async (req, res, next) => {
     try {
@@ -36,8 +43,8 @@ const taskController = {
       }
 
       const newTask = await taskModel.create({
-        title:     title.trim(),
-        completed: completed ?? false,
+        title: title.trim(),
+        completed: completed !== undefined ? parseBoolean(completed) : false,
       });
 
       res.status(201).json(newTask);
@@ -54,13 +61,12 @@ const taskController = {
       if (!title || title.trim() === '') {
         return res.status(400).json({ error: 'Title is required' });
       }
-      if (typeof completed !== 'boolean') {
-        return res.status(400).json({ error: 'completed must be true or false' });
-      }
+
+      const isCompleted = completed !== undefined ? parseBoolean(completed) : false;
 
       const updatedTask = await taskModel.update(id, {
         title: title.trim(),
-        completed,
+        completed: isCompleted,
       });
 
       if (!updatedTask) {
@@ -87,13 +93,10 @@ const taskController = {
       if (title !== undefined && title.trim() === '') {
         return res.status(400).json({ error: 'Title cannot be empty' });
       }
-      if (completed !== undefined && typeof completed !== 'boolean') {
-        return res.status(400).json({ error: 'completed must be true or false' });
-      }
 
       const fields = {};
       if (title !== undefined) fields.title = title.trim();
-      if (completed !== undefined) fields.completed = completed;
+      if (completed !== undefined) fields.completed = parseBoolean(completed);
 
       const updatedTask = await taskModel.partialUpdate(id, fields);
 
