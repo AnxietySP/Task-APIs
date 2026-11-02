@@ -19,18 +19,18 @@ const taskModel = {
     return rows[0] || null;
   },
 
-  create: async ({ title, completed = false }) => {
+  create: async ({ title, description = null, status = 'pending', completed = false }) => {
     const [result] = await pool.query(
-      'INSERT INTO tasks (title, completed) VALUES (?, ?)',
-      [title, completed]
+      'INSERT INTO tasks (title, description, status, completed) VALUES (?, ?, ?, ?)',
+      [title, description, status, completed]
     );
     return taskModel.findById(result.insertId);
   },
 
-  update: async (id, { title, completed }) => {
+  update: async (id, { title, description = null, status = 'pending', completed }) => {
     const [result] = await pool.query(
-      'UPDATE tasks SET title = ?, completed = ? WHERE id = ?',
-      [title, completed, id]
+      'UPDATE tasks SET title = ?, description = ?, status = ?, completed = ? WHERE id = ?',
+      [title, description, status, completed, id]
     );
     if (result.affectedRows === 0) return null;
     return taskModel.findById(id);
@@ -43,6 +43,14 @@ const taskModel = {
     if (fields.title !== undefined) {
       updates.push('title = ?');
       values.push(fields.title);
+    }
+    if (fields.description !== undefined) {
+      updates.push('description = ?');
+      values.push(fields.description);
+    }
+    if (fields.status !== undefined) {
+      updates.push('status = ?');
+      values.push(fields.status);
     }
     if (fields.completed !== undefined) {
       updates.push('completed = ?');

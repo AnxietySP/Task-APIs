@@ -3,7 +3,6 @@
 
 const taskModel = require('../models/taskModel');
 
-// Helper to convert various incoming completed values to a clean boolean
 const parseBoolean = (val) => {
   if (typeof val === 'boolean') return val;
   if (typeof val === 'string') return val.toLowerCase() === 'true' || val === '1' || val === 'on';
@@ -36,15 +35,22 @@ const taskController = {
 
   createTask: async (req, res, next) => {
     try {
-      const { title, completed } = req.body;
+      const { title, description, status, completed } = req.body;
 
       if (!title || title.trim() === '') {
         return res.status(400).json({ error: 'Title is required' });
       }
 
+      const taskStatus = status ? status.toLowerCase().replace(' ', '_') : 'pending';
+      const isCompleted = completed !== undefined 
+        ? parseBoolean(completed) 
+        : taskStatus === 'completed';
+
       const newTask = await taskModel.create({
         title: title.trim(),
-        completed: completed !== undefined ? parseBoolean(completed) : false,
+        description: description ? description.trim() : null,
+        status: taskStatus,
+        completed: isCompleted,
       });
 
       res.status(201).json(newTask);
@@ -56,16 +62,21 @@ const taskController = {
   updateTask: async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { title, completed } = req.body;
+      const { title, description, status, completed } = req.body;
 
       if (!title || title.trim() === '') {
         return res.status(400).json({ error: 'Title is required' });
       }
 
-      const isCompleted = completed !== undefined ? parseBoolean(completed) : false;
+      const taskStatus = status ? status.toLowerCase().replace(' ', '_') : 'pending';
+      const isCompleted = completed !== undefined 
+        ? parseBoolean(completed) 
+        : taskStatus === 'completed';
 
       const updatedTask = await taskModel.update(id, {
         title: title.trim(),
+        description: description ? description.trim() : null,
+        status: taskStatus,
         completed: isCompleted,
       });
 
@@ -82,11 +93,11 @@ const taskController = {
   patchTask: async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { title, completed } = req.body;
+      const { title, description, status, completed } = req.body;
 
-      if (title === undefined && completed === undefined) {
+      if (title === undefined && description === undefined && status === undefined && completed === undefined) {
         return res.status(400).json({
-          error: 'Provide title or completed to update',
+          error: 'Provide at least one field to update',
         });
       }
 
@@ -96,7 +107,19 @@ const taskController = {
 
       const fields = {};
       if (title !== undefined) fields.title = title.trim();
-      if (completed !== undefined) fields.completed = parseBoolean(completed);
+      if (description !== undefined) fields.description = description.trim();
+      
+      if (status !== undefined) {
+        const taskStatus = status.toLowerCase().replace(' ', '_');
+        fields.status = taskStatus;
+        if (completed === undefined) {
+          fields.completed = taskStatus === 'completed';
+        }
+      }
+      
+      if (completed !== undefined) {
+        fields.completed = parseBoolean(completed);
+      }
 
       const updatedTask = await taskModel.partialUpdate(id, fields);
 

@@ -25,5 +25,6 @@ VALUES
     ('Build the POST /tasks route', 'Create new task endpoint', 'pending', FALSE),
     ('Test all endpoints in Postman', 'Verify CRUD operations', 'pending', FALSE);
 
+-- Confirm execution and output seeded tasks
 SELECT 'Setup complete' AS status;
 SELECT * FROM tasks;

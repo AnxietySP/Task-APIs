@@ -1,6 +1,5 @@
 const API_URL = 'http://localhost:3000/tasks';
 
-
 const taskForm = document.getElementById('task-form');
 const taskIdInput = document.getElementById('task-id');
 const titleInput = document.getElementById('title');
@@ -32,20 +31,36 @@ function renderTasks(tasks) {
   }
 
   tasks.forEach(task => {
-    const isCompleted = task.status === 'completed' || task.completed == 1;
-    const item = document.createElement('div');
-    item.className = `task-item ${isCompleted ? 'completed-item' : ''}`;
+    let rawStatus = (task.status || '').toLowerCase();
+    if (!rawStatus) {
+      const isCompleted = task.completed === true || task.completed === 1 || task.completed === '1';
+      rawStatus = isCompleted ? 'completed' : 'pending';
+    }
 
-    const formattedStatus = (task.status || 'pending').replace('_', ' ');
+    let badgeClass = 'pending';
+    let badgeText = 'PENDING';
+
+    if (rawStatus === 'completed') {
+      badgeClass = 'completed';
+      badgeText = 'COMPLETED';
+    } else if (rawStatus === 'in_progress' || rawStatus === 'in progress') {
+      badgeClass = 'in_progress';
+      badgeText = 'IN PROGRESS';
+    }
+
+    const item = document.createElement('div');
+    item.className = `task-item ${badgeClass === 'completed' ? 'completed-item' : ''}`;
+
+    const descText = task.description ? task.description.trim() : '';
 
     item.innerHTML = `
       <div class="task-content">
         <div class="task-title">${escapeHtml(task.title)}</div>
-        ${task.description ? `<div class="task-description">${escapeHtml(task.description)}</div>` : ''}
-        <span class="badge ${task.status}">${formattedStatus}</span>
+        ${descText ? `<div class="task-description">${escapeHtml(descText)}</div>` : ''}
+        <span class="badge ${badgeClass}">${badgeText}</span>
       </div>
       <div class="task-actions">
-        <button class="btn-edit" onclick="startEdit(${task.id}, '${escapeQuote(task.title)}', '${escapeQuote(task.description || '')}', '${task.status}')">Edit</button>
+        <button class="btn-edit" onclick="startEdit(${task.id}, '${escapeQuote(task.title)}', '${escapeQuote(descText)}', '${rawStatus}')">Edit</button>
         <button class="btn-delete" onclick="deleteTask(${task.id})">Delete</button>
       </div>
     `;
@@ -58,11 +73,14 @@ taskForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   
   const id = taskIdInput.value;
+  const rawStatus = statusSelect.value.toLowerCase();
+  const isCompleted = rawStatus === 'completed' || rawStatus === 'true' || rawStatus === '1';
+
   const payload = {
     title: titleInput.value.trim(),
-    description: descriptionInput.value.trim(),
+    description: descriptionInput ? descriptionInput.value.trim() : null,
     status: statusSelect.value,
-    completed: statusSelect.value === 'completed' ? 1 : 0
+    completed: isCompleted
   };
 
   try {
@@ -94,8 +112,23 @@ taskForm.addEventListener('submit', async (e) => {
 function startEdit(id, title, description, status) {
   taskIdInput.value = id;
   titleInput.value = title;
-  descriptionInput.value = description;
-  statusSelect.value = status || 'pending';
+  if (descriptionInput) descriptionInput.value = description || '';
+
+  const normalizedStatus = (status || 'pending').toLowerCase().replace(' ', '_');
+
+  let optionFound = false;
+  for (let option of statusSelect.options) {
+    const optVal = option.value.toLowerCase().replace(' ', '_');
+    if (optVal === normalizedStatus) {
+      statusSelect.value = option.value;
+      optionFound = true;
+      break;
+    }
+  }
+
+  if (!optionFound && statusSelect.options.length > 0) {
+    statusSelect.selectedIndex = 0;
+  }
 
   submitBtn.textContent = 'Update Task';
   cancelBtn.hidden = false;
@@ -107,6 +140,7 @@ cancelBtn.addEventListener('click', resetForm);
 function resetForm() {
   taskIdInput.value = '';
   taskForm.reset();
+  if (descriptionInput) descriptionInput.value = '';
   submitBtn.textContent = 'Add Task';
   cancelBtn.hidden = true;
 }
